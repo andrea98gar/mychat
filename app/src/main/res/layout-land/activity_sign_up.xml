@@ -11,18 +11,33 @@
         android:gravity="center_horizontal">
         <ImageView
             android:id="@+id/logo"
-            android:layout_width="177dp"
-            android:layout_height="191dp"
+            android:layout_width="119dp"
+            android:layout_height="96dp"
             app:srcCompat="@drawable/logo" />
     </TableRow>
 
+    <TableRow
+        android:gravity="center_horizontal">
+        <EditText
+            android:id="@+id/name"
+            android:layout_width="wrap_content"
+            android:layout_height="25dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/border"
+            android:drawableLeft="@drawable/ic_action_user"
+            android:ems="10"
+            android:hint="@string/name"
+            android:textColor="@color/black"
+            android:textColorHint="@color/black"
+            android:textSize="16sp" />
+    </TableRow>
 
     <TableRow
         android:gravity="center_horizontal">
         <EditText
             android:id="@+id/username"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="25dp"
             android:layout_marginTop="8dp"
             android:background="@drawable/border"
             android:drawableLeft="@drawable/ic_action_user"
@@ -38,8 +53,8 @@
         <EditText
             android:id="@+id/password"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:layout_marginTop="16dp"
+            android:layout_height="25dp"
+            android:layout_marginTop="8dp"
             android:background="@drawable/border"
             android:drawableLeft="@drawable/ic_action_pass"
             android:ems="10"
@@ -53,25 +68,12 @@
     <TableRow
         android:gravity="center_horizontal">
         <Button
-            android:id="@+id/log_in"
-            android:layout_width="178dp"
-            android:layout_height="47dp"
-            android:layout_marginTop="36dp"
-            android:layout_marginBottom="15dp"
-            android:background="@color/green_dark"
-            android:text="@string/log_in"
-            android:textColor="@color/white"
-            android:onClick="login"/>
-    </TableRow>
-
-    <TableRow
-        android:gravity="center_horizontal">
-        <Button
             android:id="@+id/sign_up"
             android:layout_width="wrap_content"
-            android:layout_height="48dp"
+            android:layout_height="25dp"
             android:layout_marginBottom="36dp"
-            android:background="@color/green_light"
+            android:layout_marginTop="16dp"
+            android:background="@color/green_dark"
             android:text="@string/sign_up"
             android:textColor="@color/white"
             android:onClick="signup"/>

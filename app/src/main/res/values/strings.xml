@@ -1,3 +1,12 @@
 <resources>
-    <string name="app_name">MyChat</string>
+    <string name="app_name">My Chat</string>
+
+    <!-- LOG IN -->
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="log_in">Log In</string>
+    <string name="sign_up">Sign Up</string>
+
+    <!-- SIGN UP -->
+    <string name="name">Name</string>
 </resources>

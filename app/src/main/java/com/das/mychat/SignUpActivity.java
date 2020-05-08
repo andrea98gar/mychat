@@ -5,14 +5,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -23,14 +20,14 @@ import java.net.ProtocolException;
 
 import javax.net.ssl.HttpsURLConnection;
 
-public class MainActivity extends AppCompatActivity {
+public class SignUpActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_sign_up);
 
-        setTitle("Log in");
+        setTitle("Sign Up");
 
         if (android.os.Build.VERSION.SDK_INT > 9) {
             StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
@@ -38,30 +35,24 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     /**
-     * Al pulsar el botón SIGNUP se abre la actividad que permite al usuario registrarse
+     * Al pulsar el botón SIGNUP se ejecuta el siguiente método
+     * encargado de dar de alta en la base de datos el nuevo usuario
      * @param v
      */
     public void signup(View v){
-        Intent i = new Intent(this, SignUpActivity.class);
-        this.startActivity(i);
-    }
-
-    /**
-     * Al pulsar el botón LOGIN, se comprueban que los campos introducidos (usuario y contraseña)
-     * son correctos con respecto a la bd.
-     * @param v
-     */
-    public void login(View v){
         //Obtener los campos introducidos por el usuario
+        EditText i_name = (EditText) findViewById(R.id.name);
+        String name = i_name.getText().toString();
         EditText i_username = (EditText) findViewById(R.id.username);
         String username = i_username.getText().toString();
         EditText i_pass = (EditText) findViewById(R.id.password);
         String pass = i_pass.getText().toString();
 
         //Comprobar que el usuario ha introducido todos los campos
-        if(username.isEmpty() || pass.isEmpty()){
-            Toast.makeText(MainActivity.this, "Empty fields", Toast.LENGTH_SHORT).show();
+        if(name.isEmpty() || username.isEmpty() || pass.isEmpty()){
+            Toast.makeText(SignUpActivity.this, "Empty fields", Toast.LENGTH_SHORT).show();
         }else{
             //Conexion con el servidor
             HttpsURLConnection urlConnection = GeneradorConexionesSeguras.getInstance().crearConexionSegura(this, "https://134.209.235.115/agarcia683/WEB/conexion.php");
@@ -69,21 +60,21 @@ public class MainActivity extends AppCompatActivity {
             try {
                 //Parámetros que se pasan a conexion.php
                 JSONObject parametrosJSON = new JSONObject();
-                parametrosJSON.put("action", "login");
+                parametrosJSON.put("action", "signup");
                 parametrosJSON.put("username", username);
                 parametrosJSON.put("password", pass);
+                parametrosJSON.put("name", name);
 
                 urlConnection.setRequestMethod("POST");
                 urlConnection.setDoOutput(true);
                 urlConnection.setRequestProperty("Content-Type", "application/json");
-                Log.i("MY-APP", "LOGIN PARAMS: " + parametrosJSON); //genera mensajes de tipo informacion
 
                 PrintWriter out = new PrintWriter(urlConnection.getOutputStream());
                 out.print(parametrosJSON.toString());
                 out.close();
 
                 int statusCode = urlConnection.getResponseCode();
-                Log.i("MY-APP", "STATUS LOGIN: " + statusCode); //genera mensajes de tipo informacion
+                //Log.i("MY-APP", "STATUS: " + statusCode); //genera mensajes de tipo informacion
 
                 //Si la transaccion se ha realizado
                 if(statusCode == 200){
@@ -95,20 +86,14 @@ public class MainActivity extends AppCompatActivity {
                         result += line;
                     }
                     inputStream.close();
+                    //Log.i("MY-APP", "DATA: " + result); //genera mensajes de tipo informacion
 
-                    JSONParser parser = new JSONParser();
-                    JSONObject json = (JSONObject) parser.parse(result);
-                    String usuario = (String) json.get("usuario");
-
-
-                    //Se comprueba si se ha obtenido algún usuario o no
-                    if(usuario==null){
-                        Toast.makeText(MainActivity.this, "Login incorrect, please try again", Toast.LENGTH_SHORT).show();
-                    }else{//Si el login ha sido correcto entonces se abrirá la actividad PicActivity
-                        Toast.makeText(MainActivity.this, "Login correct", Toast.LENGTH_SHORT).show();
-
-                        Intent i = new Intent(this, UserListActivity.class);
-                        //i.putExtra("usuario", usuario);
+                    //Se comprueba si ha habido algún error
+                    if(result.contains("Ha habido algún error")){//El usuario ya existe
+                        Toast.makeText(SignUpActivity.this, "Username used", Toast.LENGTH_SHORT).show();
+                    }else{//Si el registro ha sido correcto se abre la actividad del login (MainActivity)
+                        Toast.makeText(SignUpActivity.this, "SignUp succesfull", Toast.LENGTH_SHORT).show();
+                        Intent i = new Intent(this, MainActivity.class);
                         this.startActivity(i);
                     }
                 }
@@ -116,12 +101,7 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
-            } catch (ParseException e) {
-                e.printStackTrace();
             }
         }
     }
-
-
-
 }

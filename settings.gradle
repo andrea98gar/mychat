@@ -1,2 +1,2 @@
-include ':app'
+include ':app', ':mariadb-java-client-2.4.3-sources'
 rootProject.name='MyChat'
