@@ -55,7 +55,7 @@ public class SignUpActivity extends AppCompatActivity {
             Toast.makeText(SignUpActivity.this, "Empty fields", Toast.LENGTH_SHORT).show();
         }else{
             //Conexion con el servidor
-            HttpsURLConnection urlConnection = GeneradorConexionesSeguras.getInstance().crearConexionSegura(this, "https://134.209.235.115/agarcia683/WEB/conexion.php");
+            HttpsURLConnection urlConnection = GeneradorConexionesSeguras.getInstance().crearConexionSegura(this, "https://134.209.235.115/agarcia683/WEB/mychat.php");
 
             try {
                 //Parámetros que se pasan a conexion.php

@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(MainActivity.this, "Empty fields", Toast.LENGTH_SHORT).show();
         }else{
             //Conexion con el servidor
-            HttpsURLConnection urlConnection = GeneradorConexionesSeguras.getInstance().crearConexionSegura(this, "https://134.209.235.115/agarcia683/WEB/conexion.php");
+            HttpsURLConnection urlConnection = GeneradorConexionesSeguras.getInstance().crearConexionSegura(this, "https://134.209.235.115/agarcia683/WEB/mychat.php");
 
             try {
                 //Parámetros que se pasan a conexion.php
@@ -107,8 +107,8 @@ public class MainActivity extends AppCompatActivity {
                     }else{//Si el login ha sido correcto entonces se abrirá la actividad PicActivity
                         Toast.makeText(MainActivity.this, "Login correct", Toast.LENGTH_SHORT).show();
 
-                        Intent i = new Intent(this, UserListActivity.class);
-                        //i.putExtra("usuario", usuario);
+                        Intent i = new Intent(this, MyUserListActivity.class);
+                        i.putExtra("usuario", usuario);
                         this.startActivity(i);
                     }
                 }
