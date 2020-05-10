@@ -20,30 +20,14 @@
     <TableRow
         android:gravity="center_horizontal">
         <EditText
-            android:id="@+id/phone"
+            android:id="@+id/pass"
             android:layout_width="wrap_content"
             android:layout_height="40dp"
             android:layout_marginTop="8dp"
             android:background="@drawable/border"
-            android:drawableLeft="@drawable/ic_action_phone"
+            android:drawableLeft="@drawable/ic_action_pass"
             android:ems="10"
-            android:hint="@string/phone"
-            android:textColor="@color/black"
-            android:textColorHint="@color/black"
-            android:textSize="16sp" />
-    </TableRow>
-
-    <TableRow
-        android:gravity="center_horizontal">
-        <EditText
-            android:id="@+id/name"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/border"
-            android:drawableLeft="@drawable/ic_action_user"
-            android:ems="10"
-            android:hint="@string/name"
+            android:hint="@string/password"
             android:textColor="@color/black"
             android:textColorHint="@color/black"
             android:textSize="16sp" />
@@ -52,15 +36,15 @@
     <TableRow
         android:gravity="center_horizontal">
         <Button
-            android:id="@+id/log_in"
+            android:id="@+id/finish"
             android:layout_width="178dp"
             android:layout_height="47dp"
             android:layout_marginTop="36dp"
             android:layout_marginBottom="15dp"
             android:background="@color/green_dark"
-            android:text="@string/next"
+            android:text="@string/finish"
             android:textColor="@color/white"
-            android:onClick="login"/>
+            android:onClick="checkPass"/>
     </TableRow>
 
 </TableLayout>

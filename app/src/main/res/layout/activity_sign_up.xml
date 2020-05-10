@@ -42,7 +42,7 @@
             android:background="@drawable/border"
             android:drawableLeft="@drawable/ic_action_user"
             android:ems="10"
-            android:hint="@string/username"
+            android:hint="ei"
             android:textColor="@color/black"
             android:textColorHint="@color/black"
             android:textSize="16sp" />
@@ -74,7 +74,7 @@
             android:layout_marginBottom="36dp"
             android:layout_marginTop="16dp"
             android:background="@color/green_dark"
-            android:text="@string/sign_up"
+            android:text="ei"
             android:textColor="@color/white"
             android:onClick="signup"/>
     </TableRow>

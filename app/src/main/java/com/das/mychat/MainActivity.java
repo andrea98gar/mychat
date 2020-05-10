@@ -1,10 +1,18 @@
 package com.das.mychat;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -20,31 +28,50 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ProtocolException;
+import java.util.Random;
 
 import javax.net.ssl.HttpsURLConnection;
 
 public class MainActivity extends AppCompatActivity {
+    final int SEND_SMS_PERMISSION_REQUEST_CODE = 1;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         setTitle("Log in");
 
         if (android.os.Build.VERSION.SDK_INT > 9) {
             StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
             StrictMode.setThreadPolicy(policy);
         }
+
+        //Si el usuario ya está logueado
+        if(Preferences.getInstance().getUserPreferences(this)!=null){
+            Intent i = new Intent(this, MyUserListActivity.class);
+            this.startActivity(i);
+        }
     }
 
-    /**
-     * Al pulsar el botón SIGNUP se abre la actividad que permite al usuario registrarse
-     * @param v
-     */
-    public void signup(View v){
-        Intent i = new Intent(this, SignUpActivity.class);
-        this.startActivity(i);
+    private void sendSMS(String phone, String pin){
+        //Permisos para enviar mensajes
+        if(checkPermission(Manifest.permission.SEND_SMS)){
+            SmsManager smsManager = SmsManager.getDefault();
+            smsManager.sendTextMessage(phone, null, "La Clave es: " + pin, null, null);
+            Toast.makeText(MainActivity.this, "Message Sent!", Toast.LENGTH_SHORT).show();
+
+        }else{
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.SEND_SMS}, SEND_SMS_PERMISSION_REQUEST_CODE);
+        }
+
+
+
+    }
+
+    private boolean checkPermission(String permission){
+        int check = ContextCompat.checkSelfPermission(this, permission);
+        return (check == PackageManager.PERMISSION_GRANTED);
     }
 
     /**
@@ -54,13 +81,18 @@ public class MainActivity extends AppCompatActivity {
      */
     public void login(View v){
         //Obtener los campos introducidos por el usuario
-        EditText i_username = (EditText) findViewById(R.id.username);
-        String username = i_username.getText().toString();
-        EditText i_pass = (EditText) findViewById(R.id.password);
-        String pass = i_pass.getText().toString();
+        EditText i_phone = (EditText) findViewById(R.id.phone);
+        String phone = i_phone.getText().toString();
+        EditText i_name = (EditText) findViewById(R.id.name);
+        String name = i_name.getText().toString();
+
+        //Generar clave
+        Random pinGenerator = new Random();
+        String pin = String.valueOf(pinGenerator.nextInt(999999-0+1));
+        Log.i("MY-APP", "PIN: " + pin); //genera mensajes de tipo informacion
 
         //Comprobar que el usuario ha introducido todos los campos
-        if(username.isEmpty() || pass.isEmpty()){
+        if(name.isEmpty() || phone.isEmpty()){
             Toast.makeText(MainActivity.this, "Empty fields", Toast.LENGTH_SHORT).show();
         }else{
             //Conexion con el servidor
@@ -70,20 +102,19 @@ public class MainActivity extends AppCompatActivity {
                 //Parámetros que se pasan a conexion.php
                 JSONObject parametrosJSON = new JSONObject();
                 parametrosJSON.put("action", "login");
-                parametrosJSON.put("username", username);
-                parametrosJSON.put("password", pass);
+                parametrosJSON.put("phone", phone);
+                parametrosJSON.put("name", name);
+                parametrosJSON.put("pin", pin);
 
                 urlConnection.setRequestMethod("POST");
                 urlConnection.setDoOutput(true);
                 urlConnection.setRequestProperty("Content-Type", "application/json");
-                Log.i("MY-APP", "LOGIN PARAMS: " + parametrosJSON); //genera mensajes de tipo informacion
 
                 PrintWriter out = new PrintWriter(urlConnection.getOutputStream());
                 out.print(parametrosJSON.toString());
                 out.close();
 
                 int statusCode = urlConnection.getResponseCode();
-                Log.i("MY-APP", "STATUS LOGIN: " + statusCode); //genera mensajes de tipo informacion
 
                 //Si la transaccion se ha realizado
                 if(statusCode == 200){
@@ -95,20 +126,22 @@ public class MainActivity extends AppCompatActivity {
                         result += line;
                     }
                     inputStream.close();
-
-                    JSONParser parser = new JSONParser();
-                    JSONObject json = (JSONObject) parser.parse(result);
-                    String usuario = (String) json.get("usuario");
+                    Log.i("MY-APP", "LOGIN DATA: " + result); //genera mensajes de tipo informacion
 
 
-                    //Se comprueba si se ha obtenido algún usuario o no
-                    if(usuario==null){
+
+                    //Se comprueba si se ha ocurrido algún error
+                    if(result.contains("Ha habido algún error")){//El usuario ya existe
                         Toast.makeText(MainActivity.this, "Login incorrect, please try again", Toast.LENGTH_SHORT).show();
                     }else{//Si el login ha sido correcto entonces se abrirá la actividad PicActivity
-                        Toast.makeText(MainActivity.this, "Login correct", Toast.LENGTH_SHORT).show();
+                        //Guardar el usuario en las preferencias de la aplicación
+                        Preferences.getInstance().setUserPreferences(phone, this);
 
-                        Intent i = new Intent(this, MyUserListActivity.class);
-                        i.putExtra("usuario", usuario);
+                        //Enviar SMS
+                        sendSMS(phone, pin);
+
+                        //Comprobar clave usuario
+                        Intent i = new Intent(this, SMSActivity.class);
                         this.startActivity(i);
                     }
                 }
@@ -116,12 +149,7 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
-            } catch (ParseException e) {
-                e.printStackTrace();
             }
         }
     }
-
-
-
 }

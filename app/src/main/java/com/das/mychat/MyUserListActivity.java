@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import javax.net.ssl.HttpsURLConnection;
 
 public class MyUserListActivity extends AppCompatActivity {
-    String currentUser;
+    String user;
     ArrayList<String> users = new ArrayList<>();
     ArrayAdapter arrayAdapter;
 
@@ -40,8 +40,7 @@ public class MyUserListActivity extends AppCompatActivity {
         setTitle("My Users");
 
         //Obtener usuario
-        Intent i = getIntent();
-        currentUser = i.getStringExtra("usuario");
+        user = Preferences.getInstance().getUserPreferences(this);
 
         //Todos los usuarios
         FloatingActionButton addUserBtn = findViewById(R.id.addUserBtn);
@@ -49,7 +48,6 @@ public class MyUserListActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent i = new Intent(getApplicationContext(), UserListActivity.class);
-                i.putExtra("usuario", currentUser);
                 startActivity(i);
             }
         });
@@ -59,7 +57,6 @@ public class MyUserListActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent i = new Intent(getApplicationContext(), ChatActivity.class);
-                i.putExtra("usuario", currentUser);
                 i.putExtra("usuarioChat", users.get(position));
                 startActivity(i);
             }
@@ -78,7 +75,7 @@ public class MyUserListActivity extends AppCompatActivity {
             //Parámetros que se pasan a conexion.php
             JSONObject parametrosJSON = new JSONObject();
             parametrosJSON.put("action", "getMyUserList");
-            parametrosJSON.put("username", currentUser);
+            parametrosJSON.put("phone", user);
 
 
             urlConnection.setRequestMethod("POST");
@@ -116,8 +113,9 @@ public class MyUserListActivity extends AppCompatActivity {
                     if(array != null){
                         for(int i = 0; i<array.size(); i++){
                             JSONObject json = (JSONObject) array.get(i);
-                            String user = (String) json.get("usuarioChat");
-                            users.add(user);
+                            String user = (String) json.get("tlfChat");
+                            String name = (String) json.get("nombreChat");
+                            users.add(name+" ("+user+")");
                         }
                     }
                 }

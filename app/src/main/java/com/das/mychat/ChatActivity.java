@@ -31,7 +31,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 public class ChatActivity extends AppCompatActivity {
     String currentUser;
-    String chatUser;
+    String tlfChatUser, nameChatUser;
     ArrayList<String> messages = new ArrayList<>();
     ArrayAdapter arrayAdapter;
 
@@ -42,19 +42,23 @@ public class ChatActivity extends AppCompatActivity {
 
         //Usuario actual
         Intent i = getIntent();
-        currentUser = i.getStringExtra("usuario");
-        chatUser = i.getStringExtra("usuarioChat");
+        currentUser = Preferences.getInstance().getUserPreferences(this);
 
-        setTitle("Chat with " + chatUser);
+        //Usuario chat
+        String info_chatUser = i.getStringExtra("usuarioChat");
+        tlfChatUser = info_chatUser.substring(info_chatUser.indexOf("(")+1, info_chatUser.indexOf(")"));
+        nameChatUser = info_chatUser.substring(0, info_chatUser.indexOf("(")-1);
+        setTitle("Chat with " + nameChatUser);
 
+        Log.i("MY-APP", "TLF CHAT: " + tlfChatUser); //genera mensajes de tipo informacion
+        Log.i("MY-APP", "NAME CHAT: " + nameChatUser); //genera mensajes de tipo informacion
+
+
+        //Mensajes
         ListView chatListView = (ListView) findViewById(R.id.chatListView);
         arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, messages);
         chatListView.setAdapter(arrayAdapter);
         getMessages();
-
-
-        Log.i("MY-APP", "CHAT USER: " + chatUser); //genera mensajes de tipo informacion
-
 
     }
 
@@ -75,7 +79,7 @@ public class ChatActivity extends AppCompatActivity {
                 JSONObject parametrosJSON = new JSONObject();
                 parametrosJSON.put("action", "sendMessage");
                 parametrosJSON.put("currentUser", currentUser);
-                parametrosJSON.put("chatUser", chatUser);
+                parametrosJSON.put("chatUser", tlfChatUser);
                 parametrosJSON.put("message", chatEditText.getText().toString());
                 parametrosJSON.put("time", timeStamp);
 
@@ -128,8 +132,8 @@ public class ChatActivity extends AppCompatActivity {
             //Parámetros que se pasan a conexion.php
             JSONObject parametrosJSON = new JSONObject();
             parametrosJSON.put("action", "getMessages");
-            parametrosJSON.put("currentUser", currentUser);
-            parametrosJSON.put("chatUser", chatUser);
+            parametrosJSON.put("currentUser", "699191262");
+            parametrosJSON.put("chatUser", "987654321");
 
 
             urlConnection.setRequestMethod("POST");
@@ -152,7 +156,6 @@ public class ChatActivity extends AppCompatActivity {
                     result += line;
                 }
                 inputStream.close();
-                Log.i("MY-APP", "DATA: " + result); //genera mensajes de tipo informacion
 
 
                 //Se comprueba si ha habido algún error
@@ -163,15 +166,25 @@ public class ChatActivity extends AppCompatActivity {
                     //Se guarda en un array los resultados obtenidos
                     JSONParser parser = new JSONParser();
                     JSONArray array = (JSONArray) parser.parse(result);
+                    Log.i("MY-APP", "DATA CHAT: " + result); //genera mensajes de tipo informacion
+
                     if(array != null){
                         messages.clear();
                         for(int i = 0; i<array.size(); i++){
                             JSONObject json = (JSONObject) array.get(i);
                             String message = (String) json.get("mensaje");
                             String remitente = (String) json.get("remitente");
-                            messages.add(remitente+": "+message);
+                            Log.i("MY-APP", "mensaje CHAT: " + message); //genera mensajes de tipo informacion
+                            Log.i("MY-APP", "remitente CHAT: " + remitente); //genera mensajes de tipo informacion
+
+                            if(remitente.equals(tlfChatUser)){
+                                messages.add("> "+message);
+                            }else{
+                                messages.add(message);
+                            }
                         }
                         arrayAdapter.notifyDataSetChanged();
+
                     }
                 }
             }
