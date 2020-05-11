@@ -49,30 +49,42 @@ public class MainActivity extends AppCompatActivity {
 
 
         //Si el usuario ya está logueado
+
         if(Preferences.getInstance().getUserPreferences(this)!=null){
             Intent i = new Intent(this, MyUserListActivity.class);
             this.startActivity(i);
         }
     }
 
-    private void sendSMS(String phone, String pin){
-        //Permisos para enviar mensajes
-        if(checkPermission(Manifest.permission.SEND_SMS)){
-            SmsManager smsManager = SmsManager.getDefault();
-            smsManager.sendTextMessage(phone, null, "La Clave es: " + pin, null, null);
-            Toast.makeText(MainActivity.this, "Message Sent!", Toast.LENGTH_SHORT).show();
+    private void sendEmail(String email, String pin){
+        //Conexion con el servidor
+        HttpsURLConnection urlConnection = GeneradorConexionesSeguras.getInstance().crearConexionSegura(this, "https://134.209.235.115/agarcia683/WEB/sendEmail.php");
 
-        }else{
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.SEND_SMS}, SEND_SMS_PERMISSION_REQUEST_CODE);
+        try {
+            //Parámetros que se pasan a conexion.php
+            JSONObject parametrosJSON = new JSONObject();
+            parametrosJSON.put("email", email);
+            parametrosJSON.put("pin", pin);
+
+            urlConnection.setRequestMethod("POST");
+            urlConnection.setDoOutput(true);
+            urlConnection.setRequestProperty("Content-Type", "application/json");
+
+            PrintWriter out = new PrintWriter(urlConnection.getOutputStream());
+            out.print(parametrosJSON.toString());
+            out.close();
+
+            int statusCode = urlConnection.getResponseCode();
+
+            if (statusCode == 200) {
+                //Se obtienen los resultados
+                Toast.makeText(MainActivity.this, "Message Sent!", Toast.LENGTH_SHORT).show();
+            }
+        } catch (ProtocolException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-
-
-    }
-
-    private boolean checkPermission(String permission){
-        int check = ContextCompat.checkSelfPermission(this, permission);
-        return (check == PackageManager.PERMISSION_GRANTED);
     }
 
     /**
@@ -82,18 +94,17 @@ public class MainActivity extends AppCompatActivity {
      */
     public void login(View v){
         //Obtener los campos introducidos por el usuario
-        EditText i_phone = (EditText) findViewById(R.id.phone);
-        String phone = i_phone.getText().toString();
+        EditText i_email = (EditText) findViewById(R.id.phone);
+        String email = i_email.getText().toString();
         EditText i_name = (EditText) findViewById(R.id.name);
         String name = i_name.getText().toString();
 
         //Generar clave
         Random pinGenerator = new Random();
         String pin = String.valueOf(pinGenerator.nextInt(999999-0+1));
-        Log.i("MY-APP", "PIN: " + pin); //genera mensajes de tipo informacion
 
         //Comprobar que el usuario ha introducido todos los campos
-        if(name.isEmpty() || phone.isEmpty()){
+        if(name.isEmpty() || email.isEmpty()){
             Toast.makeText(MainActivity.this, "Empty fields", Toast.LENGTH_SHORT).show();
         }else{
             //Conexion con el servidor
@@ -103,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
                 //Parámetros que se pasan a conexion.php
                 JSONObject parametrosJSON = new JSONObject();
                 parametrosJSON.put("action", "login");
-                parametrosJSON.put("phone", phone);
+                parametrosJSON.put("phone", email);
                 parametrosJSON.put("name", name);
                 parametrosJSON.put("pin", pin);
 
@@ -129,17 +140,15 @@ public class MainActivity extends AppCompatActivity {
                     inputStream.close();
                     Log.i("MY-APP", "LOGIN DATA: " + result); //genera mensajes de tipo informacion
 
-
-
                     //Se comprueba si se ha ocurrido algún error
                     if(result.contains("Ha habido algún error")){//El usuario ya existe
                         Toast.makeText(MainActivity.this, "Login incorrect, please try again", Toast.LENGTH_SHORT).show();
                     }else{//Si el login ha sido correcto entonces se abrirá la actividad PicActivity
                         //Guardar el usuario en las preferencias de la aplicación
-                        Preferences.getInstance().setUserPreferences(phone, this);
+                        Preferences.getInstance().setUserPreferences(email, this);
 
-                        //Enviar SMS
-                        sendSMS(phone, pin);
+                        //Enviar email
+                        sendEmail(email, pin);
 
                         //Comprobar clave usuario
                         Intent i = new Intent(this, SMSActivity.class);
