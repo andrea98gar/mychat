@@ -35,7 +35,6 @@ import javax.net.ssl.HttpsURLConnection;
 public class MainActivity extends AppCompatActivity {
     final int SEND_SMS_PERMISSION_REQUEST_CODE = 1;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
             StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
             StrictMode.setThreadPolicy(policy);
         }
+
+
 
         //Si el usuario ya está logueado
         if(Preferences.getInstance().getUserPreferences(this)!=null){
@@ -152,4 +153,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+
+
 }
