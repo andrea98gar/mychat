@@ -40,4 +40,11 @@
         android:background="@color/green_dark"
         android:onClick="sendChat"/>
 
+    <Button
+        android:id="@+id/btVoice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="chatBot"
+        android:text="Button" />
+
 </RelativeLayout>
