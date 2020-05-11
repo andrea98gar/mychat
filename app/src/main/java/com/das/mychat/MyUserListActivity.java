@@ -56,6 +56,8 @@ public class MyUserListActivity extends AppCompatActivity {
         userListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Log.i("MY-APP", "USER CHAT: " + users.get(position)); //genera mensajes de tipo informacion
+
                 Intent i = new Intent(getApplicationContext(), ChatActivity.class);
                 i.putExtra("usuarioChat", users.get(position));
                 startActivity(i);

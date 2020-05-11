@@ -21,7 +21,7 @@
         <activity android:name=".MyUserListActivity" />
         <activity
             android:name=".ChatActivity"
-            android:parentActivityName=".UserListActivity" />
+            android:parentActivityName=".MyUserListActivity" />
         <activity
             android:name=".UserListActivity"
             android:parentActivityName=".MyUserListActivity" />

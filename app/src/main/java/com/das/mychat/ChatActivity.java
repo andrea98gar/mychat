@@ -50,16 +50,11 @@ public class ChatActivity extends AppCompatActivity {
         nameChatUser = info_chatUser.substring(0, info_chatUser.indexOf("(")-1);
         setTitle("Chat with " + nameChatUser);
 
-        Log.i("MY-APP", "TLF CHAT: " + tlfChatUser); //genera mensajes de tipo informacion
-        Log.i("MY-APP", "NAME CHAT: " + nameChatUser); //genera mensajes de tipo informacion
-
-
         //Mensajes
         ListView chatListView = (ListView) findViewById(R.id.chatListView);
         arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, messages);
         chatListView.setAdapter(arrayAdapter);
         getMessages();
-
     }
 
     public void sendChat (View v){
@@ -111,6 +106,8 @@ public class ChatActivity extends AppCompatActivity {
                         Toast.makeText(ChatActivity.this, "Error", Toast.LENGTH_SHORT).show();
                     }else{//Si el registro ha sido correcto se abre la actividad del login (MainActivity)
                         Toast.makeText(ChatActivity.this, "Message send", Toast.LENGTH_SHORT).show();
+                        EditText sendEditText = (EditText) findViewById(R.id.chatEditText);
+                        sendEditText.setText("");
                         getMessages();
                         arrayAdapter.notifyDataSetChanged();
                         /*Intent i = new Intent(this, ChatActivity.class);
@@ -132,8 +129,8 @@ public class ChatActivity extends AppCompatActivity {
             //Parámetros que se pasan a conexion.php
             JSONObject parametrosJSON = new JSONObject();
             parametrosJSON.put("action", "getMessages");
-            parametrosJSON.put("currentUser", "699191262");
-            parametrosJSON.put("chatUser", "987654321");
+            parametrosJSON.put("currentUser", currentUser);
+            parametrosJSON.put("chatUser", tlfChatUser);
 
 
             urlConnection.setRequestMethod("POST");
@@ -174,9 +171,6 @@ public class ChatActivity extends AppCompatActivity {
                             JSONObject json = (JSONObject) array.get(i);
                             String message = (String) json.get("mensaje");
                             String remitente = (String) json.get("remitente");
-                            Log.i("MY-APP", "mensaje CHAT: " + message); //genera mensajes de tipo informacion
-                            Log.i("MY-APP", "remitente CHAT: " + remitente); //genera mensajes de tipo informacion
-
                             if(remitente.equals(tlfChatUser)){
                                 messages.add("> "+message);
                             }else{
@@ -184,7 +178,6 @@ public class ChatActivity extends AppCompatActivity {
                             }
                         }
                         arrayAdapter.notifyDataSetChanged();
-
                     }
                 }
             }
