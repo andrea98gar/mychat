@@ -42,7 +42,7 @@ public class MyUserListActivity extends AppCompatActivity {
         //Obtener usuario
         user = Preferences.getInstance().getUserPreferences(this);
 
-        //Todos los usuarios
+        //Al pulsar el botón + se abre una nueva actividad
         FloatingActionButton addUserBtn = findViewById(R.id.addUserBtn);
         addUserBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -52,12 +52,11 @@ public class MyUserListActivity extends AppCompatActivity {
             }
         });
 
+        //Al pulsar un elemento del list view se abre un chat con el usuario pulsado
         ListView userListView = (ListView) findViewById(R.id.myUserListView);
         userListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.i("MY-APP", "USER CHAT: " + users.get(position)); //genera mensajes de tipo informacion
-
                 Intent i = new Intent(getApplicationContext(), ChatActivity.class);
                 i.putExtra("usuarioChat", users.get(position));
                 startActivity(i);
@@ -74,6 +73,11 @@ public class MyUserListActivity extends AppCompatActivity {
         userListView.setAdapter(arrayAdapter);
     }
 
+
+    /**
+     * Recupera todos los usuarios registrados en la base de datos
+     * @throws ParseException
+     */
     private void getMyUserList() throws ParseException {
 
         //Parámetros que se pasan a conexion.php

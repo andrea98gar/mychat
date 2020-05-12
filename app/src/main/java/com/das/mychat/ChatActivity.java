@@ -5,12 +5,10 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
-import android.text.Html;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -23,8 +21,7 @@ import com.androidnetworking.AndroidNetworking;
 import com.androidnetworking.common.Priority;
 import com.androidnetworking.error.ANError;
 import com.androidnetworking.interfaces.JSONObjectRequestListener;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+
 
 import org.json.JSONException;
 import org.json.simple.JSONArray;
@@ -32,18 +29,11 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.ProtocolException;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Map;
 
-import javax.net.ssl.HttpsURLConnection;
 
 import ai.api.AIListener;
 import ai.api.android.AIConfiguration;
@@ -121,6 +111,11 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
         chatEditText = findViewById(R.id.chatEditText);
     }
 
+    /**
+     * Al pulsar el botón SEND se añade el mensaje a la conversación correspondiente
+     * @param v
+     * @throws ParseException
+     */
     public void sendChat(View v) throws ParseException {
         String input = chatEditText.getText().toString();
         if (input.isEmpty()) {
@@ -138,6 +133,7 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
             parametrosJSON.put("message", chatEditText.getText().toString());
             parametrosJSON.put("time", timeStamp);
 
+            //Post en base de datos
             String result = DBUtilities.getInstance().postDB(this, parametrosJSON);
 
             //Se comprueba si ha habido algún error
@@ -151,8 +147,8 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
                 arrayAdapter.notifyDataSetChanged();
             }
 
+            //Si el usuario del chat es el bot, se obtiene una respuesta automática.
             if(userChat.equals("bot")){
-                // hablar con bot
                 getResponseBot(input);
             }
         }
@@ -232,6 +228,10 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
 
     }
 
+    /**
+     * Recupera los mensajes entre el usuario actual y el usuario del chat
+     * @throws ParseException
+     */
     private void getMessages() throws ParseException {
         //Parámetros que se pasan a conexion.php
         JSONObject parametrosJSON = new JSONObject();
@@ -239,6 +239,7 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
         parametrosJSON.put("currentUser", currentUser);
         parametrosJSON.put("chatUser", userChat);
 
+        //Post en base de datos
         String result = DBUtilities.getInstance().postDB(this, parametrosJSON);
 
         //Se comprueba si ha habido algún error
@@ -249,7 +250,6 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
             //Se guarda en un array los resultados obtenidos
             JSONParser parser = new JSONParser();
             JSONArray array = (JSONArray) parser.parse(result);
-            Log.i("MY-APP", "DATA CHAT: " + result); //genera mensajes de tipo informacion
 
             if (array != null) {
                 messages.clear();

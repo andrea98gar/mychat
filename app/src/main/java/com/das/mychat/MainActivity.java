@@ -32,46 +32,36 @@ public class MainActivity extends AppCompatActivity {
             StrictMode.setThreadPolicy(policy);
         }
 
-
+        /*
         //Si el usuario ya está logueado
-        if(Preferences.getInstance().getUserPreferences(this)!=null){
+        if(Preferences.getInstance().getUserPreferences(this)!=null && Preferences.getInstance().checkUserPreferences(this)){
             Intent i = new Intent(this, MyUserListActivity.class);
             this.startActivity(i);
-        }
+        }*/
     }
 
     /**
      * Ejecuta el php que se encarga de enviar un mensaje con el código.
      * @param email
-     * @param pin
+     * @param code
      */
-    private void sendEmail(String email, String pin){
-        //Conexion con el servidor
-        HttpsURLConnection urlConnection = GeneradorConexionesSeguras.getInstance().crearConexionSegura(this, "https://134.209.235.115/agarcia683/WEB/sendEmail.php");
+    private void sendEmail(String email, String code) throws IOException {
+        //Parámetros que se pasan a sendEmail.php
+        JSONObject parametrosJSON = new JSONObject();
+        parametrosJSON.put("email", email);
+        parametrosJSON.put("pin", code);
 
-        try {
-            //Parámetros que se pasan a sendEmail.php
-            JSONObject parametrosJSON = new JSONObject();
-            parametrosJSON.put("email", email);
-            parametrosJSON.put("pin", pin);
+        //Post email
+        int emailSend = DBUtilities.getInstance().postEmail(this, parametrosJSON);
 
-            urlConnection.setRequestMethod("POST");
-            urlConnection.setDoOutput(true);
-            urlConnection.setRequestProperty("Content-Type", "application/json");
+        if (emailSend == 200) {
+            Toast.makeText(MainActivity.this, R.string.success_message_send, Toast.LENGTH_SHORT).show();
 
-            PrintWriter out = new PrintWriter(urlConnection.getOutputStream());
-            out.print(parametrosJSON.toString());
-            out.close();
-
-            int statusCode = urlConnection.getResponseCode();
-
-            if (statusCode == 200) {
-                Toast.makeText(MainActivity.this, "Message Sent!", Toast.LENGTH_SHORT).show();
-            }
-        } catch (ProtocolException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+            //Siguiente actividad
+            Intent i = new Intent(this, CodeActivity.class);
+            this.startActivity(i);
+        }else{
+            Toast.makeText(MainActivity.this, R.string.error_bd, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -97,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
      * En caso de que ya exista se modificará el nombre y el código.
      * @param v
      */
-    public void login(View v){
+    public void login(View v) throws IOException {
         //Obtener los campos introducidos por el usuario
         EditText i_email = (EditText) findViewById(R.id.email);
         String email = i_email.getText().toString();
@@ -112,14 +102,14 @@ public class MainActivity extends AppCompatActivity {
             if(checkEmailFormat(email)){
                 //Generar clave
                 Random pinGenerator = new Random();
-                String pin = String.valueOf(pinGenerator.nextInt(999999-0+1));
+                String code = String.valueOf(pinGenerator.nextInt(999999-0+1));
 
                 //Parámetros que se pasan a mychat.php
                 JSONObject parametrosJSON = new JSONObject();
                 parametrosJSON.put("action", "login");
                 parametrosJSON.put("user", email);
                 parametrosJSON.put("name", name);
-                parametrosJSON.put("pin", pin);
+                parametrosJSON.put("pin", code);
 
                 //Post en base de datos
                 String result = DBUtilities.getInstance().postDB(this, parametrosJSON);
@@ -132,11 +122,9 @@ public class MainActivity extends AppCompatActivity {
                     Preferences.getInstance().setUserPreferences(email, this);
 
                     //Enviar email
-                    sendEmail(email, pin);
+                    sendEmail(email, code);
 
-                    //Siguiente actividad
-                    Intent i = new Intent(this, CodeActivity.class);
-                    this.startActivity(i);
+
                 }
             }else{
                 Toast.makeText(MainActivity.this, R.string.error_email_format, Toast.LENGTH_SHORT).show();

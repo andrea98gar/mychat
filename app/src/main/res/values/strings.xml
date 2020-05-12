@@ -22,6 +22,8 @@
     <!-- SUCCESS MESSAGES -->
     <string name="success_user_add">User added!</string>
     <string name="success_message_send">Message Send!</string>
+    <string name="success_code_send">Code Send!</string>
+
 
 
 

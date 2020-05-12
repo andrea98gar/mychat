@@ -1,6 +1,7 @@
 package com.das.mychat;
 
 import android.content.Context;
+import android.widget.Toast;
 
 import org.json.simple.JSONObject;
 
@@ -26,6 +27,12 @@ public class DBUtilities {
         return instancia;
     }
 
+    /**
+     * Se encarga de realizar la conexion con la base de datos y envío de parámetros
+     * @param ctx
+     * @param parametrosJSON
+     * @return
+     */
     public String postDB(Context ctx, JSONObject parametrosJSON) {
         String result = "";
         //Conexion con el servidor
@@ -61,6 +68,28 @@ public class DBUtilities {
             e.printStackTrace();
         }
         return result;
+    }
+
+    /**
+     * Se encarga de ejecutar el php que envía el email
+     * @param ctx
+     * @param parametrosJSON
+     * @return
+     * @throws IOException
+     */
+    public int postEmail(Context ctx, JSONObject parametrosJSON) throws IOException {
+        //Conexion con el servidor
+        HttpsURLConnection urlConnection = GeneradorConexionesSeguras.getInstance().crearConexionSegura(ctx, "https://134.209.235.115/agarcia683/WEB/sendEmail.php");
+
+        urlConnection.setRequestMethod("POST");
+        urlConnection.setDoOutput(true);
+        urlConnection.setRequestProperty("Content-Type", "application/json");
+
+        PrintWriter out = new PrintWriter(urlConnection.getOutputStream());
+        out.print(parametrosJSON.toString());
+        out.close();
+
+        return urlConnection.getResponseCode();
     }
 
 }

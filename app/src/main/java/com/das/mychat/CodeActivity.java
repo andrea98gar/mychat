@@ -72,13 +72,15 @@ public class CodeActivity extends AppCompatActivity {
                     String clave = (String) json.get("clave");
                     //Comprobar que el código es correcto
                     if(clave.equals(code)){
-                        //Guardar el usuario en las preferencias de la aplicación
+                        //Guardar la confirmación del usuario
                         Preferences.getInstance().setCheckUserPreference(this, "done");
                         //Ir a la pantalla principal de la aplicación
                         Intent i = new Intent(this, MyUserListActivity.class);
                         this.startActivity(i);
                     }else{
                         Toast.makeText(CodeActivity.this, R.string.error_code, Toast.LENGTH_SHORT).show();
+                        //Guardar la confirmación del usuario
+                        Preferences.getInstance().setCheckUserPreference(this, "error");
                         Intent i = new Intent(this, MainActivity.class);
                         this.startActivity(i);
                     }

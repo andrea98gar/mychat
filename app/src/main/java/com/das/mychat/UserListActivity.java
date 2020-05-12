@@ -61,7 +61,7 @@ public class UserListActivity extends AppCompatActivity {
     }
 
     /**
-     * Obtener lista de usuarios logueados
+     * Recupera la lista de todos los usuarios registrados en la aplicación
      */
     private void getUserList() throws ParseException {
         //Parámetros que se pasan a mychat.php
@@ -69,6 +69,7 @@ public class UserListActivity extends AppCompatActivity {
         parametrosJSON.put("action", "getUserList");
         parametrosJSON.put("user", user);
 
+        //Post en base de datos
         String result = DBUtilities.getInstance().postDB(this, parametrosJSON);
 
         //Se comprueba si ha habido algún error
@@ -93,6 +94,10 @@ public class UserListActivity extends AppCompatActivity {
     }
 
 
+    /**
+     * Añade un nuevo usuario a la lista de chats del usuario actual
+     * @param usuarioChat
+     */
     private void addUserToMyList(String usuarioChat){
         //Parámetros que se pasan a mychat.php
         JSONObject parametrosJSON = new JSONObject();
@@ -100,6 +105,7 @@ public class UserListActivity extends AppCompatActivity {
         parametrosJSON.put("currentUser", user);
         parametrosJSON.put("chatUser", usuarioChat.substring(usuarioChat.indexOf("(")+1, usuarioChat.indexOf(")")));
 
+        //Post en base de datos
         String result = DBUtilities.getInstance().postDB(this, parametrosJSON);
 
         if(result.contains("Ha habido algún error")){
@@ -110,7 +116,5 @@ public class UserListActivity extends AppCompatActivity {
             this.startActivity(i);
         }
     }
-
-
 }
 
