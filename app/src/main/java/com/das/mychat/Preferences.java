@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 
 public class Preferences {
 
-
     private static Preferences instancia;
 
     private Preferences(){}

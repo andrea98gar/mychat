@@ -2,10 +2,27 @@
     <string name="app_name">My Chat</string>
 
     <!-- LOG IN -->
-    <string name="phone">Phone</string>
+    <string name="mail">Mail</string>
     <string name="name">Name</string>
-    <string name="password">Password</string>
+    <string name="code">Code</string>
     <string name="next">next</string>
     <string name="finish">Finish</string>
+
+    <!-- ERROR MESSAGES -->
+    <string name="error_login">Please try again</string>
+    <string name="error_email_format">Incorrect email format</string>
+    <string name="error_name">Choose another name</string>
+    <string name="error_empty">Empty field(s)</string>
+    <string name="error_code">Incorrect code</string>
+    <string name="error_bd">Error</string>
+    <string name="error_message_empty">Message Empty</string>
+    <string name="error_message_bot">Error bot message</string>
+
+
+    <!-- SUCCESS MESSAGES -->
+    <string name="success_user_add">User added!</string>
+    <string name="success_message_send">Message Send!</string>
+
+
 
 </resources>

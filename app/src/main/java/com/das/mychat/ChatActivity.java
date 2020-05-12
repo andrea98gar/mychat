@@ -56,9 +56,8 @@ import ai.api.model.Result;
 public class ChatActivity extends AppCompatActivity implements AIListener {
     private static final int REQUEST_INTERNET = 200;
 
-
     String currentUser;
-    String tlfChatUser, nameChatUser;
+    String userChat, nameChat;
     ArrayList<String> messages = new ArrayList<>();
     ArrayAdapter arrayAdapter;
 
@@ -82,15 +81,19 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
 
         //Usuario chat
         String info_chatUser = i.getStringExtra("usuarioChat");
-        tlfChatUser = info_chatUser.substring(info_chatUser.indexOf("(") + 1, info_chatUser.indexOf(")"));
-        nameChatUser = info_chatUser.substring(0, info_chatUser.indexOf("(") - 1);
-        setTitle("Chat with " + nameChatUser);
+        userChat = info_chatUser.substring(info_chatUser.indexOf("(") + 1, info_chatUser.indexOf(")"));
+        nameChat = info_chatUser.substring(0, info_chatUser.indexOf("(") - 1);
+        setTitle("Chat with " + nameChat);
 
         //Mensajes
         ListView chatListView = (ListView) findViewById(R.id.chatListView);
         arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, messages);
         chatListView.setAdapter(arrayAdapter);
-        getMessages();
+        try {
+            getMessages();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
 
         final AIConfiguration configuration =
                 new AIConfiguration("f25a4bdddd2e42afa5b3c7727dbc6104",
@@ -101,6 +104,12 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
         aiService.setListener(this);
 
         btVoice = findViewById(R.id.btVoice);
+        if(userChat.equals("bot")){
+            btVoice.setVisibility(View.VISIBLE);
+
+        }else{
+            btVoice.setVisibility(View.INVISIBLE);
+        }
 
         mTextToSpeech = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
             @Override
@@ -112,71 +121,40 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
         chatEditText = findViewById(R.id.chatEditText);
     }
 
-    public void sendChat(View v) {
-
+    public void sendChat(View v) throws ParseException {
         String input = chatEditText.getText().toString();
         if (input.isEmpty()) {
-            Toast.makeText(ChatActivity.this, "Message empty", Toast.LENGTH_SHORT).show();
+            Toast.makeText(ChatActivity.this, R.string.error_message_empty, Toast.LENGTH_SHORT).show();
 
         } else {
             //Fecha
             String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
 
-            HttpsURLConnection urlConnection = GeneradorConexionesSeguras.getInstance().crearConexionSegura(this, "https://134.209.235.115/agarcia683/WEB/mychat.php");
+            //Parámetros que se pasan a conexion.php
+            JSONObject parametrosJSON = new JSONObject();
+            parametrosJSON.put("action", "sendMessage");
+            parametrosJSON.put("currentUser", currentUser);
+            parametrosJSON.put("chatUser", userChat);
+            parametrosJSON.put("message", chatEditText.getText().toString());
+            parametrosJSON.put("time", timeStamp);
 
-            try {
-                //Parámetros que se pasan a conexion.php
-                JSONObject parametrosJSON = new JSONObject();
-                parametrosJSON.put("action", "sendMessage");
-                parametrosJSON.put("currentUser", currentUser);
-                parametrosJSON.put("chatUser", tlfChatUser);
-                parametrosJSON.put("message", chatEditText.getText().toString());
-                parametrosJSON.put("time", timeStamp);
+            String result = DBUtilities.getInstance().postDB(this, parametrosJSON);
 
-
-                urlConnection.setRequestMethod("POST");
-                urlConnection.setDoOutput(true);
-                urlConnection.setRequestProperty("Content-Type", "application/json");
-
-                PrintWriter out = new PrintWriter(urlConnection.getOutputStream());
-                out.print(parametrosJSON.toString());
-                out.close();
-
-                int statusCode = urlConnection.getResponseCode();
-
-                //Si la transaccion se ha realizado
-                if (statusCode == 200) {
-                    //Se obtienen los resultados
-                    BufferedInputStream inputStream = new BufferedInputStream(urlConnection.getInputStream());
-                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
-                    String line, result = "";
-                    while ((line = bufferedReader.readLine()) != null) {
-                        result += line;
-                    }
-                    inputStream.close();
-                    //Log.i("MY-APP", "DATA: " + result); //genera mensajes de tipo informacion
-
-                    //Se comprueba si ha habido algún error
-                    if (result.contains("Ha habido algún error")) {//El usuario ya existe
-                        Toast.makeText(ChatActivity.this, "Error", Toast.LENGTH_SHORT).show();
-                    } else {//Si el registro ha sido correcto se abre la actividad del login (MainActivity)
-                        Toast.makeText(ChatActivity.this, "Message send", Toast.LENGTH_SHORT).show();
-                        EditText sendEditText = (EditText) findViewById(R.id.chatEditText);
-                        sendEditText.setText("");
-                        getMessages();
-                        arrayAdapter.notifyDataSetChanged();
-                        /*Intent i = new Intent(this, ChatActivity.class);
-                        this.startActivity(i);*/
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+            //Se comprueba si ha habido algún error
+            if (result.contains("Ha habido algún error")) {//El usuario ya existe
+                Toast.makeText(ChatActivity.this, R.string.error_bd, Toast.LENGTH_SHORT).show();
+            } else {//Si el registro ha sido correcto se abre la actividad del login (MainActivity)
+                Toast.makeText(ChatActivity.this, R.string.success_message_send, Toast.LENGTH_SHORT).show();
+                EditText sendEditText = (EditText) findViewById(R.id.chatEditText);
+                sendEditText.setText("");
+                getMessages();
+                arrayAdapter.notifyDataSetChanged();
             }
 
-            // hablar con bot
-            getResponseBot(input);
-
-
+            if(userChat.equals("bot")){
+                // hablar con bot
+                getResponseBot(input);
+            }
         }
     }
 
@@ -215,8 +193,33 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
                         // parseo la respuesta del json
                         try {
                             String outputJsonObject = response.getJSONObject("output").getJSONArray("text").getString(0);
+                            //Fecha
+                            String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+
+                            //Parámetros que se pasan a conexion.php
+                            JSONObject parametrosJSON = new JSONObject();
+                            parametrosJSON.put("action", "sendMessage");
+                            parametrosJSON.put("currentUser", "bot");
+                            parametrosJSON.put("chatUser", currentUser);
+                            parametrosJSON.put("message", outputJsonObject);
+                            parametrosJSON.put("time", timeStamp);
+
+                            String result = DBUtilities.getInstance().postDB(getApplicationContext(), parametrosJSON);
+
+                            //Se comprueba si ha habido algún error
+                            if (result.contains("Ha habido algún error")) {//El usuario ya existe
+                                Toast.makeText(ChatActivity.this, R.string.error_message_bot, Toast.LENGTH_SHORT).show();
+                            } else {//Si el registro ha sido correcto se abre la actividad del login (MainActivity)
+                                EditText sendEditText = (EditText) findViewById(R.id.chatEditText);
+                                sendEditText.setText("");
+                                getMessages();
+                                arrayAdapter.notifyDataSetChanged();
+                            }
+
                             Log.i("MY-APP", "BOT: " + outputJsonObject);
                         } catch (JSONException e) {
+                            e.printStackTrace();
+                        } catch (ParseException e) {
                             e.printStackTrace();
                         }
                     }
@@ -229,67 +232,39 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
 
     }
 
-    private void getMessages() {
-        HttpsURLConnection urlConnection = GeneradorConexionesSeguras.getInstance().crearConexionSegura(this, "https://134.209.235.115/agarcia683/WEB/mychat.php");
+    private void getMessages() throws ParseException {
+        //Parámetros que se pasan a conexion.php
+        JSONObject parametrosJSON = new JSONObject();
+        parametrosJSON.put("action", "getMessages");
+        parametrosJSON.put("currentUser", currentUser);
+        parametrosJSON.put("chatUser", userChat);
 
-        try {
-            //Parámetros que se pasan a conexion.php
-            JSONObject parametrosJSON = new JSONObject();
-            parametrosJSON.put("action", "getMessages");
-            parametrosJSON.put("currentUser", currentUser);
-            parametrosJSON.put("chatUser", tlfChatUser);
+        String result = DBUtilities.getInstance().postDB(this, parametrosJSON);
 
+        //Se comprueba si ha habido algún error
+        if (result.contains("Ha habido algún error")) {//No se ha podido recuperar la lista de usuarios
+            Toast.makeText(ChatActivity.this, R.string.error_bd, Toast.LENGTH_SHORT).show();
+        } else {//Añadir a users todos los usuarios
 
-            urlConnection.setRequestMethod("POST");
-            urlConnection.setDoOutput(true);
-            urlConnection.setRequestProperty("Content-Type", "application/json");
+            //Se guarda en un array los resultados obtenidos
+            JSONParser parser = new JSONParser();
+            JSONArray array = (JSONArray) parser.parse(result);
+            Log.i("MY-APP", "DATA CHAT: " + result); //genera mensajes de tipo informacion
 
-            PrintWriter out = new PrintWriter(urlConnection.getOutputStream());
-            out.print(parametrosJSON.toString());
-            out.close();
-
-            int statusCode = urlConnection.getResponseCode();
-
-            //Si la transaccion se ha realizado
-            if (statusCode == 200) {
-                //Se obtienen los resultados
-                BufferedInputStream inputStream = new BufferedInputStream(urlConnection.getInputStream());
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
-                String line, result = "";
-                while ((line = bufferedReader.readLine()) != null) {
-                    result += line;
-                }
-                inputStream.close();
-
-
-                //Se comprueba si ha habido algún error
-                if (result.contains("Ha habido algún error")) {//No se ha podido recuperar la lista de usuarios
-                    Toast.makeText(ChatActivity.this, "Error", Toast.LENGTH_SHORT).show();
-                } else {//Añadir a users todos los usuarios
-
-                    //Se guarda en un array los resultados obtenidos
-                    JSONParser parser = new JSONParser();
-                    JSONArray array = (JSONArray) parser.parse(result);
-                    Log.i("MY-APP", "DATA CHAT: " + result); //genera mensajes de tipo informacion
-
-                    if (array != null) {
-                        messages.clear();
-                        for (int i = 0; i < array.size(); i++) {
-                            JSONObject json = (JSONObject) array.get(i);
-                            String message = (String) json.get("mensaje");
-                            String remitente = (String) json.get("remitente");
-                            if (remitente.equals(tlfChatUser)) {
-                                messages.add("> " + message);
-                            } else {
-                                messages.add(message);
-                            }
-                        }
-                        arrayAdapter.notifyDataSetChanged();
+            if (array != null) {
+                messages.clear();
+                for (int i = 0; i < array.size(); i++) {
+                    JSONObject json = (JSONObject) array.get(i);
+                    String message = (String) json.get("mensaje");
+                    String remitente = (String) json.get("remitente");
+                    if (remitente.equals(userChat)) {
+                        messages.add("> " + message);
+                    } else {
+                        messages.add(message);
                     }
                 }
+                arrayAdapter.notifyDataSetChanged();
             }
-        } catch (IOException | ParseException e) {
-            e.printStackTrace();
         }
     }
 

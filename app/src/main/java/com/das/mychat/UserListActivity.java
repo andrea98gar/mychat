@@ -51,7 +51,11 @@ public class UserListActivity extends AppCompatActivity {
         });
 
         users.clear();
-        getUserList();
+        try {
+            getUserList();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, users);
         userListView.setAdapter(arrayAdapter);
     }
@@ -59,112 +63,54 @@ public class UserListActivity extends AppCompatActivity {
     /**
      * Obtener lista de usuarios logueados
      */
-    private void getUserList(){
-        HttpsURLConnection urlConnection = GeneradorConexionesSeguras.getInstance().crearConexionSegura(this, "https://134.209.235.115/agarcia683/WEB/mychat.php");
+    private void getUserList() throws ParseException {
+        //Parámetros que se pasan a mychat.php
+        JSONObject parametrosJSON = new JSONObject();
+        parametrosJSON.put("action", "getUserList");
+        parametrosJSON.put("user", user);
 
-        try {
-            //Parámetros que se pasan a conexion.php
-            JSONObject parametrosJSON = new JSONObject();
-            parametrosJSON.put("action", "getUserList");
-            parametrosJSON.put("phone", user);
+        String result = DBUtilities.getInstance().postDB(this, parametrosJSON);
 
-            urlConnection.setRequestMethod("POST");
-            urlConnection.setDoOutput(true);
-            urlConnection.setRequestProperty("Content-Type", "application/json");
+        //Se comprueba si ha habido algún error
+        if(result.contains("Ha habido algún error")){//No se ha podido recuperar la lista de usuarios
+            Toast.makeText(UserListActivity.this, R.string.error_bd, Toast.LENGTH_SHORT).show();
+        }else{//Añadir a users todos los usuarios
 
-            PrintWriter out = new PrintWriter(urlConnection.getOutputStream());
-            out.print(parametrosJSON.toString());
-            out.close();
-
-            int statusCode = urlConnection.getResponseCode();
-
-            //Si la transaccion se ha realizado
-            if(statusCode == 200){
-                //Se obtienen los resultados
-                BufferedInputStream inputStream = new BufferedInputStream(urlConnection.getInputStream());
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
-                String line, result="";
-                while((line = bufferedReader.readLine()) != null){
-                    result += line;
-                }
-                inputStream.close();
-                Log.i("MY-APP", "DATA: " + result); //genera mensajes de tipo informacion
-
-
-                //Se comprueba si ha habido algún error
-                if(result.contains("Ha habido algún error")){//No se ha podido recuperar la lista de usuarios
-                    Toast.makeText(UserListActivity.this, "Error", Toast.LENGTH_SHORT).show();
-                }else{//Añadir a users todos los usuarios
-
-                    //Se guarda en un array los resultados obtenidos
-                    JSONParser parser = new JSONParser();
-                    JSONArray array = (JSONArray) parser.parse(result);
-                    if(array != null){
-                        for(int i = 0; i<array.size(); i++){
-                            JSONObject json = (JSONObject) array.get(i);
-                            String phone = (String) json.get("tlf");
-                            String name = (String) json.get("nombre");
-                            users.add(name+" ("+phone+")");
-                        }
+            //Se guarda en un array los resultados obtenidos
+            JSONParser parser = new JSONParser();
+            JSONArray array = (JSONArray) parser.parse(result);
+            if(array != null){
+                for(int i = 0; i<array.size(); i++){
+                    JSONObject json = (JSONObject) array.get(i);
+                    String usuario = (String) json.get("usuario");
+                    String name = (String) json.get("nombre");
+                    if(!usuario.equals("bot")){
+                        users.add(name+" ("+usuario+")");
                     }
                 }
             }
-        } catch (ProtocolException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ParseException e) {
-            e.printStackTrace();
         }
     }
 
 
     private void addUserToMyList(String usuarioChat){
-        //Conexion con el servidor
-        HttpsURLConnection urlConnection = GeneradorConexionesSeguras.getInstance().crearConexionSegura(this, "https://134.209.235.115/agarcia683/WEB/mychat.php");
+        //Parámetros que se pasan a mychat.php
+        JSONObject parametrosJSON = new JSONObject();
+        parametrosJSON.put("action", "addUser");
+        parametrosJSON.put("currentUser", user);
+        parametrosJSON.put("chatUser", usuarioChat.substring(usuarioChat.indexOf("(")+1, usuarioChat.indexOf(")")));
 
-        try {
-            //Parámetros que se pasan a conexion.php
-            JSONObject parametrosJSON = new JSONObject();
-            parametrosJSON.put("action", "addUser");
-            parametrosJSON.put("currentUser", user);
-            parametrosJSON.put("chatUser", usuarioChat.substring(usuarioChat.indexOf("(")+1, usuarioChat.indexOf(")")));
+        String result = DBUtilities.getInstance().postDB(this, parametrosJSON);
 
-            urlConnection.setRequestMethod("POST");
-            urlConnection.setDoOutput(true);
-            urlConnection.setRequestProperty("Content-Type", "application/json");
-
-            PrintWriter out = new PrintWriter(urlConnection.getOutputStream());
-            out.print(parametrosJSON.toString());
-            out.close();
-
-            int statusCode = urlConnection.getResponseCode();
-
-            //Si la transaccion se ha realizado
-            if(statusCode == 200){
-                //Se obtienen los resultados
-                BufferedInputStream inputStream = new BufferedInputStream(urlConnection.getInputStream());
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
-                String line, result="";
-                while((line = bufferedReader.readLine()) != null){
-                    result += line;
-                }
-                inputStream.close();
-
-                if(result.contains("Ha habido algún error")){
-                    Toast.makeText(UserListActivity.this, "Error", Toast.LENGTH_SHORT).show();
-                }else{
-                    Toast.makeText(UserListActivity.this, "User added", Toast.LENGTH_SHORT).show();
-                    Intent i = new Intent(this, MyUserListActivity.class);
-                    this.startActivity(i);
-                }
-            }
-        } catch (ProtocolException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if(result.contains("Ha habido algún error")){
+            Toast.makeText(UserListActivity.this, R.string.error_bd, Toast.LENGTH_SHORT).show();
+        }else{
+            Toast.makeText(UserListActivity.this, R.string.success_user_add, Toast.LENGTH_SHORT).show();
+            Intent i = new Intent(this, MyUserListActivity.class);
+            this.startActivity(i);
         }
     }
+
 
 }
 
