@@ -42,5 +42,7 @@ dependencies {
 
     annotationProcessor 'org.apache.logging.log4j:log4j-core:2.2'
 
+    implementation 'com.amitshekhar.android:android-networking:1.0.0'
+
 
 }

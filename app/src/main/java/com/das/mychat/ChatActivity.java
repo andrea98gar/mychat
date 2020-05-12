@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
+import android.text.Html;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -18,8 +19,14 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.androidnetworking.AndroidNetworking;
+import com.androidnetworking.common.Priority;
+import com.androidnetworking.error.ANError;
+import com.androidnetworking.interfaces.JSONObjectRequestListener;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
+import org.json.JSONException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -60,6 +67,8 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
     Button btVoice;
     TextToSpeech mTextToSpeech;
 
+    EditText chatEditText;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -99,12 +108,14 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
 
             }
         });
+
+        chatEditText = findViewById(R.id.chatEditText);
     }
 
     public void sendChat(View v) {
-        EditText chatEditText = (EditText) findViewById(R.id.chatEditText);
 
-        if (chatEditText.getText().toString().isEmpty()) {
+        String input = chatEditText.getText().toString();
+        if (input.isEmpty()) {
             Toast.makeText(ChatActivity.this, "Message empty", Toast.LENGTH_SHORT).show();
 
         } else {
@@ -158,12 +169,64 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
                         this.startActivity(i);*/
                     }
                 }
-            } catch (ProtocolException e) {
-                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
+            // hablar con bot
+            getResponseBot(input);
+
+
         }
+    }
+
+    private void getResponseBot(String input) {
+        String urlAssistant = "https://api.eu-gb.assistant.watson.cloud.ibm.com/instances/a01f1085-8568-4032-af58-e48a2b08b0d0/v1/workspaces/c2bcf23e-af1c-40d1-a2d5-32abe694db8c/message?version=2020-04-01";
+        String auth = "YXBpa2V5Omp5NHpEeGtOaE00WEhJcEV5NzVaQzB4dlFIQXc3cG5kZVJlRExBbGxDdl9T";
+
+        // mensaje Json
+        org.json.JSONObject inputJsonObject = new org.json.JSONObject();
+        try {
+            inputJsonObject.put("text", input);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        org.json.JSONObject jsonBody = new org.json.JSONObject();
+        try {
+            jsonBody.put("input", inputJsonObject);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        // llamada http
+        AndroidNetworking.post(urlAssistant)
+                .addHeaders("Content-Type", "application/json")
+                .addHeaders("Authorization", "Basic " + auth)
+                .addJSONObjectBody(jsonBody)
+                .setPriority(Priority.HIGH)
+                .setTag(getString(R.string.app_name))
+                .build()
+                .getAsJSONObject(new JSONObjectRequestListener() {
+                    @Override
+                    public void onResponse(org.json.JSONObject response) {
+
+
+                        // parseo la respuesta del json
+                        try {
+                            String outputJsonObject = response.getJSONObject("output").getJSONArray("text").getString(0);
+                            Log.i("MY-APP", "BOT: " + outputJsonObject);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onError(ANError anError) {
+                        Toast.makeText(getApplicationContext(), "Error de conexión", Toast.LENGTH_LONG).show();
+                    }
+                });
+
     }
 
     private void getMessages() {
@@ -225,11 +288,7 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
                     }
                 }
             }
-        } catch (ProtocolException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ParseException e) {
+        } catch (IOException | ParseException e) {
             e.printStackTrace();
         }
     }
@@ -291,5 +350,6 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
             ActivityCompat.requestPermissions(ChatActivity.this, new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_INTERNET);
         }
     }
+
 
 }
