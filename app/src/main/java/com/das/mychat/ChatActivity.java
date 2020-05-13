@@ -158,7 +158,6 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
         String input = chatEditText.getText().toString();
         if (input.isEmpty()) {
             Toast.makeText(ChatActivity.this, R.string.error_message_empty, Toast.LENGTH_SHORT).show();
-
         } else {
             //Fecha
             String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
@@ -308,22 +307,25 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
                 for (int i = 0; i < array.size(); i++) {
                     JSONObject json = (JSONObject) array.get(i);
                     String message = (String) json.get("mensaje");
+
                     String decryptedData = null;
                     // decrypt
                     try {
-
                         decryptedData = decrypt(message);
                         Log.i("MY-APP", "DENCRYPT: " + decryptedData);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
 
-                    String remitente = (String) json.get("remitente");
-                    if (remitente.equals(userChat)) {
-                        messages.add("> " + decryptedData);
-                    } else {
-                        messages.add(decryptedData);
+                    if(decryptedData != null){
+                        String remitente = (String) json.get("remitente");
+                        if (remitente.equals(userChat)) {
+                            messages.add("> " + decryptedData);
+                        } else {
+                            messages.add(decryptedData);
+                        }
                     }
+
                 }
                 arrayAdapter.notifyDataSetChanged();
             }

@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
 
         // && Preferences.getInstance().checkUserPreferences(this)
         //Si el usuario ya está logueado
-        if(Preferences.getInstance().getUserPreferences(this)!=null ){
+        if(Preferences.getInstance().getUserPreferences(this)!=null && Preferences.getInstance().checkUserPreferences(this)){
             Intent i = new Intent(this, MyUserListActivity.class);
             this.startActivity(i);
         }
