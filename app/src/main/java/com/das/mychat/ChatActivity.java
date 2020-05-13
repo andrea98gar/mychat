@@ -58,7 +58,7 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
 
     // Bot
     AIService aiService;
-    Button btVoice;
+    Button btVoice, btnActualizar;
     TextToSpeech mTextToSpeech;
 
     EditText chatEditText;
@@ -91,6 +91,14 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
             e.printStackTrace();
         }
 
+
+        btnActualizar = findViewById(R.id.btnActualizar);
+        if (userChat.equals("bot")) {
+            btnActualizar.setVisibility(View.INVISIBLE);
+        } else {
+            btnActualizar.setVisibility(View.VISIBLE);
+        }
+
         final AIConfiguration configuration =
                 new AIConfiguration("f25a4bdddd2e42afa5b3c7727dbc6104",
                         AIConfiguration.SupportedLanguages.Spanish,
@@ -115,6 +123,10 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
         });
 
         chatEditText = findViewById(R.id.chatEditText);
+    }
+
+    public void actualizar(View v) throws ParseException {
+        getMessages();
     }
 
     private String encrypt(String string) throws Exception {
@@ -148,6 +160,8 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
 
     }
 
+
+
     /**
      * Al pulsar el botón SEND se añade el mensaje a la conversación correspondiente
      *
@@ -164,8 +178,8 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
 
 
             // encrypt
-            String encrypt = encrypt(input);
-            Log.i("MY-APP", "ENCRYPT: " + encrypt);
+            //String encrypt = encrypt(input);
+            //Log.i("MY-APP", "ENCRYPT: " + encrypt);
 
 
             //Parámetros que se pasan a conexion.php
@@ -173,7 +187,7 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
             parametrosJSON.put("action", "sendMessage");
             parametrosJSON.put("currentUser", currentUser);
             parametrosJSON.put("chatUser", userChat);
-            parametrosJSON.put("message", encrypt);
+            parametrosJSON.put("message", input);
             parametrosJSON.put("time", timeStamp);
 
             //Post en base de datos
@@ -184,6 +198,7 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
                 Toast.makeText(ChatActivity.this, R.string.error_bd, Toast.LENGTH_SHORT).show();
             } else {//Si el registro ha sido correcto se abre la actividad del login (MainActivity)
                 Toast.makeText(ChatActivity.this, R.string.success_message_send, Toast.LENGTH_SHORT).show();
+
                 EditText sendEditText = (EditText) findViewById(R.id.chatEditText);
                 sendEditText.setText("");
                 getMessages();
@@ -236,8 +251,8 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
                             String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
 
                             // encrypt
-                            String encrypt = encrypt(outputJsonObject);
-                            Log.i("MY-APP", "ENCRYPT: " + encrypt);
+                            //String encrypt = encrypt(outputJsonObject);
+                            //Log.i("MY-APP", "ENCRYPT: " + encrypt);
 
 
                             //Parámetros que se pasan a conexion.php
@@ -245,7 +260,7 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
                             parametrosJSON.put("action", "sendMessage");
                             parametrosJSON.put("currentUser", "bot");
                             parametrosJSON.put("chatUser", currentUser);
-                            parametrosJSON.put("message", encrypt);
+                            parametrosJSON.put("message", outputJsonObject);
                             parametrosJSON.put("time", timeStamp);
 
                             String result = DBUtilities.getInstance().postDB(getApplicationContext(), parametrosJSON);
@@ -308,6 +323,7 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
                     JSONObject json = (JSONObject) array.get(i);
                     String message = (String) json.get("mensaje");
 
+                    /*
                     String decryptedData = null;
                     // decrypt
                     try {
@@ -315,16 +331,17 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
                         Log.i("MY-APP", "DENCRYPT: " + decryptedData);
                     } catch (Exception e) {
                         e.printStackTrace();
-                    }
+                    }*/
 
-                    if(decryptedData != null){
+                    //if(decryptedData != null){
                         String remitente = (String) json.get("remitente");
                         if (remitente.equals(userChat)) {
-                            messages.add("> " + decryptedData);
+                            messages.add("> " + message);
                         } else {
-                            messages.add(decryptedData);
+                            messages.add(message);
                         }
-                    }
+
+                    //}
 
                 }
                 arrayAdapter.notifyDataSetChanged();

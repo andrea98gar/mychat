@@ -12,4 +12,25 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MyUserListActivity">
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="0dip"
+            android:layout_weight="1"
+            android:gravity="right|bottom"
+            android:orientation="vertical">
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/addUserBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:backgroundTint="@color/green_dark"
+                app:srcCompat="@drawable/ic_action_add" />
+        </TableRow>
+    </TableLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

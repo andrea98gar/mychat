@@ -53,6 +53,16 @@ public class MyUserListActivity extends AppCompatActivity {
             }
         });
 
+        //Al pulsar el botón + se abre una nueva actividad
+        FloatingActionButton addUserBtn = findViewById(R.id.addUserBtn);
+        addUserBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(getApplicationContext(), UserListActivity.class);
+                startActivity(i);
+            }
+        });
+
         users.clear();
         try {
             getMyUserList();

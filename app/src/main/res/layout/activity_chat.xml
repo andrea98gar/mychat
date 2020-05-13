@@ -53,5 +53,16 @@ tools:context=".ChatActivity">
         android:drawableEnd="@drawable/ic_action_voice"
         android:onClick="chatBot"
         android:textColor="@color/black" />
+    <Button
+        android:id="@+id/btnActualizar"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+
+        android:background="@drawable/transparent"
+        android:drawableEnd="@drawable/ic_action_reload"
+        android:onClick="actualizar"
+        android:textColor="@color/black" />
 
 </RelativeLayout>
