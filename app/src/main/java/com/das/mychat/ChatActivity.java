@@ -30,10 +30,15 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 
+import java.io.UnsupportedEncodingException;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+import javax.crypto.Cipher;
+
+import javax.crypto.spec.SecretKeySpec;
 
 import ai.api.AIListener;
 import ai.api.android.AIConfiguration;
@@ -57,6 +62,7 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
     TextToSpeech mTextToSpeech;
 
     EditText chatEditText;
+    private byte[] encryptionKey = {9, 115, 51, 86, 105, 4, -31, -23, -68, 88, 17, 20, 3, -105, 119, -53};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,10 +100,10 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
         aiService.setListener(this);
 
         btVoice = findViewById(R.id.btVoice);
-        if(userChat.equals("bot")){
+        if (userChat.equals("bot")) {
             btVoice.setVisibility(View.VISIBLE);
 
-        }else{
+        } else {
             btVoice.setVisibility(View.INVISIBLE);
         }
 
@@ -111,12 +117,44 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
         chatEditText = findViewById(R.id.chatEditText);
     }
 
+    private String encrypt(String string) throws Exception {
+        byte[] stringByte = string.getBytes();
+        byte[] encryptedByte;
+        SecretKeySpec skeySpec = new SecretKeySpec(encryptionKey, "AES");
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.ENCRYPT_MODE, skeySpec);
+        encryptedByte = cipher.doFinal(stringByte);
+        String returnString = null;
+        try {
+            returnString = new String(encryptedByte, "ISO-8859-1");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return returnString;
+
+    }
+
+    private String decrypt(String string) throws Exception {
+        byte[] EncryptedByte = string.getBytes("ISO-8859-1");
+        String decryptedString;
+        byte[] decryption;
+
+        SecretKeySpec skeySpec = new SecretKeySpec(encryptionKey, "AES");
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.DECRYPT_MODE, skeySpec);
+        decryption = cipher.doFinal(EncryptedByte);
+        decryptedString = new String(decryption);
+        return decryptedString;
+
+    }
+
     /**
      * Al pulsar el botón SEND se añade el mensaje a la conversación correspondiente
+     *
      * @param v
      * @throws ParseException
      */
-    public void sendChat(View v) throws ParseException {
+    public void sendChat(View v) throws Exception {
         String input = chatEditText.getText().toString();
         if (input.isEmpty()) {
             Toast.makeText(ChatActivity.this, R.string.error_message_empty, Toast.LENGTH_SHORT).show();
@@ -125,12 +163,18 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
             //Fecha
             String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
 
+
+            // encrypt
+            String encrypt = encrypt(input);
+            Log.i("MY-APP", "ENCRYPT: " + encrypt);
+
+
             //Parámetros que se pasan a conexion.php
             JSONObject parametrosJSON = new JSONObject();
             parametrosJSON.put("action", "sendMessage");
             parametrosJSON.put("currentUser", currentUser);
             parametrosJSON.put("chatUser", userChat);
-            parametrosJSON.put("message", chatEditText.getText().toString());
+            parametrosJSON.put("message", encrypt);
             parametrosJSON.put("time", timeStamp);
 
             //Post en base de datos
@@ -148,7 +192,7 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
             }
 
             //Si el usuario del chat es el bot, se obtiene una respuesta automática.
-            if(userChat.equals("bot")){
+            if (userChat.equals("bot")) {
                 getResponseBot(input);
             }
         }
@@ -192,12 +236,17 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
                             //Fecha
                             String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
 
+                            // encrypt
+                            String encrypt = encrypt(outputJsonObject);
+                            Log.i("MY-APP", "ENCRYPT: " + encrypt);
+
+
                             //Parámetros que se pasan a conexion.php
                             JSONObject parametrosJSON = new JSONObject();
                             parametrosJSON.put("action", "sendMessage");
                             parametrosJSON.put("currentUser", "bot");
                             parametrosJSON.put("chatUser", currentUser);
-                            parametrosJSON.put("message", outputJsonObject);
+                            parametrosJSON.put("message", encrypt);
                             parametrosJSON.put("time", timeStamp);
 
                             String result = DBUtilities.getInstance().postDB(getApplicationContext(), parametrosJSON);
@@ -217,6 +266,8 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
                             e.printStackTrace();
                         } catch (ParseException e) {
                             e.printStackTrace();
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
                     }
 
@@ -230,6 +281,7 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
 
     /**
      * Recupera los mensajes entre el usuario actual y el usuario del chat
+     *
      * @throws ParseException
      */
     private void getMessages() throws ParseException {
@@ -256,11 +308,21 @@ public class ChatActivity extends AppCompatActivity implements AIListener {
                 for (int i = 0; i < array.size(); i++) {
                     JSONObject json = (JSONObject) array.get(i);
                     String message = (String) json.get("mensaje");
+                    String decryptedData = null;
+                    // decrypt
+                    try {
+
+                        decryptedData = decrypt(message);
+                        Log.i("MY-APP", "DENCRYPT: " + decryptedData);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
                     String remitente = (String) json.get("remitente");
                     if (remitente.equals(userChat)) {
-                        messages.add("> " + message);
+                        messages.add("> " + decryptedData);
                     } else {
-                        messages.add(message);
+                        messages.add(decryptedData);
                     }
                 }
                 arrayAdapter.notifyDataSetChanged();
